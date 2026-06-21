@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competitor Radar · Nineitiesdesign × Soon</title>
+<script src="data.js"></script>
+<script src="chart.min.js"></script>
+<script>if(typeof Chart==='undefined'){document.write('<scr'+'ipt src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/scr'+'ipt>');}</script>
+<style>
+:root{
+  --bg:#0f1115; --panel:#191c23; --panel2:#21252e; --line:#2c313c;
+  --text:#e7e9ee; --muted:#9aa3b2; --accent:#c98a5a; --accent2:#5dd0e8;
+  --up:#34d399; --down:#f87171; --warn:#fbbf24;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"Segoe UI","Sarabun",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;padding-left:234px}
+a{color:inherit}
+.wrap{max-width:1600px;margin:0 auto;padding:26px 28px 60px}
+/* sidebar nav */
+.sidebar{position:fixed;left:0;top:0;width:234px;height:100vh;overflow-y:auto;
+  background:var(--panel);border-right:1px solid var(--line);padding:16px 12px;z-index:50}
+.sidebar .brand{font-weight:700;font-size:14px;padding:4px 10px 12px;line-height:1.3}
+.sidebar .brand small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:3px}
+.navsec{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);padding:13px 11px 4px;opacity:.65}
+.navlink{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;
+  color:var(--muted);text-decoration:none;font-size:13px;cursor:pointer;margin:1px 0}
+.navlink:hover{background:var(--panel2);color:var(--text)}
+.navlink.active{background:rgba(93,208,232,.14);color:var(--accent2);font-weight:600}
+.navlink .ic{width:18px;text-align:center;flex-shrink:0}
+.sec-title{scroll-margin-top:14px}
+@media(max-width:900px){
+  body{padding-left:0}
+  .sidebar{position:sticky;width:auto;height:auto;display:flex;gap:4px;overflow-x:auto;
+    border-right:0;border-bottom:1px solid var(--line);padding:8px}
+  .sidebar .brand,.sidebar .navsec{display:none}
+  .navlink{white-space:nowrap;padding:7px 12px;margin:0}
+}
+h1{font-size:26px;font-weight:700;margin:0 0 4px}
+h2{font-size:18px;font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:13px}
+.sec-title{text-transform:uppercase;color:var(--accent2);letter-spacing:2px;
+  font-size:12px;font-weight:700;margin:34px 0 12px}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.tag{background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+  padding:4px 11px;font-size:12px;color:var(--muted)}
+.mockbar{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.45);
+  color:var(--warn);border-radius:10px;padding:9px 14px;margin-top:14px;font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(6,1fr)}
+.row2{grid-template-columns:1.3fr 1fr}
+.row2b{grid-template-columns:1fr 1fr}
+.kpi .v{font-size:23px;font-weight:700;margin-top:3px}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .d{font-size:12px;margin-top:4px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--muted)}
+/* brand filter */
+.filterbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 2px}
+.bchip{display:flex;align-items:center;gap:7px;background:var(--panel2);
+  border:1px solid var(--line);border-radius:999px;padding:5px 13px;cursor:pointer;
+  font-size:13px;user-select:none;transition:.12s}
+.bchip .dot{width:10px;height:10px;border-radius:50%}
+.bchip.off{opacity:.32;filter:grayscale(.6)}
+.bchip:hover{border-color:var(--accent2)}
+.btnmini{background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer}
+.btnmini:hover{color:var(--text)}
+.wklabel{display:flex;align-items:center;background:var(--panel2);border:1px solid var(--line);
+  border-radius:999px;padding:5px 13px;font-size:13px}
+.wklabel select{background:transparent;border:0;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;outline:none}
+.modetoggle{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.mbtn{background:transparent;border:0;color:var(--muted);padding:6px 15px;font-size:13px;font-family:inherit;cursor:pointer}
+.mbtn.active{background:var(--accent2);color:#0f1115;font-weight:700}
+.cmprow{margin:9px 0}
+.cmprow .cl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;gap:8px;align-items:center}
+.cmprow .cl .nm{color:var(--text);font-weight:600}
+.cmpbars{display:flex;gap:4px;align-items:center;height:16px}
+.cmpbars .ba{height:100%;border-radius:3px;opacity:.45}
+.cmpbars .bb{height:100%;border-radius:3px}
+.delta{font-size:12px;font-weight:700;flex-shrink:0}
+/* chart boxes */
+.chartbox{position:relative;height:300px}
+.chartbox.tall{height:360px}
+.note{color:var(--muted);font-size:12.5px;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+.chart-fallback{display:flex;align-items:center;justify-content:center;height:100%;
+  color:var(--warn);font-size:13px;text-align:center}
+/* brand scoreboard */
+.scoreboard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.bcard{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:15px;
+  border-left:4px solid var(--accent)}
+.bcard .bn{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px}
+.bcard .seg{color:var(--muted);font-size:11.5px;font-weight:400}
+.bcard .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:12px}
+.bcard .m .mv{font-size:16px;font-weight:600}
+.bcard .m .ml{font-size:11px;color:var(--muted)}
+.sparkwrap{height:40px;margin-top:12px;position:relative}
+/* top sellers */
+.topgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tpanel{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tpanel h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:7px}
+.trow{margin:8px 0}
+.trow .tl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px;gap:8px}
+.trow .tl .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;color:var(--text)}
+.trow .tl .mo{color:var(--accent2);font-weight:600;flex-shrink:0}
+.bar{height:7px;background:#11141a;border-radius:4px;overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:4px}
+/* swatches */
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{text-align:center;font-size:11px;color:var(--muted)}
+.sw .blk{width:54px;height:38px;border-radius:8px;border:1px solid var(--line);margin-bottom:4px}
+/* tone UI */
+.tonelegend{display:flex;flex-wrap:wrap;gap:8px 18px}
+.tlg{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text)}
+.sw-dot{width:13px;height:13px;border-radius:4px;border:1px solid var(--line);display:inline-block;flex-shrink:0}
+.tonerow{margin:13px 0}
+.tonerow .tl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:5px;gap:8px}
+.tonerow .tl .nm{font-weight:700}
+.tonebar{display:flex;height:20px;border-radius:6px;overflow:hidden;background:#11141a;border:1px solid var(--line)}
+.tonebar>span{height:100%}
+.palbar{height:26px}
+.palbar>span{min-width:3px;box-shadow:inset -1px 0 0 rgba(0,0,0,.28)}
+.swbox{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px;border:1px solid var(--line)}
+.palgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.palcell{display:flex;flex-direction:column;align-items:center;gap:4px;width:62px}
+.palsw{width:62px;height:46px;border-radius:8px;border:1px solid var(--line)}
+.pallbl{font-size:12px;font-weight:700;color:var(--accent2)}
+.thumb,.thumb-sm{cursor:zoom-in;transition:transform .12s}
+.thumb:hover,.thumb-sm:hover{transform:scale(1.06)}
+.lb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:24px}
+.lb-overlay.on{display:flex}
+.lb-box{position:relative;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;gap:12px;align-items:center}
+.lb-box img{max-width:90vw;max-height:80vh;border-radius:14px;box-shadow:0 16px 56px rgba(0,0,0,.65);object-fit:contain;background:#11141a}
+.lb-meta{display:flex;gap:18px;align-items:center;color:#fff;font-size:14px;max-width:90vw;flex-wrap:wrap;justify-content:center}
+.lb-meta .lbnm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}
+.lb-meta a{color:var(--accent2);text-decoration:none;white-space:nowrap;border:1px solid var(--line);padding:5px 12px;border-radius:8px}
+.lb-meta a:hover{background:rgba(255,255,255,.08)}
+.lb-close{position:absolute;top:-16px;right:-16px;width:36px;height:36px;border-radius:50%;border:none;background:#fff;color:#000;font-size:17px;cursor:pointer;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.gaprow{padding:11px 0;border-bottom:1px solid var(--line)}
+.gaprow .gl{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px;flex-wrap:wrap}
+.gaprow .gc{font-weight:700;font-size:13.5px}
+.gaprow .gtag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.gaprow .gb{display:flex;align-items:center;gap:9px;font-size:12px;margin:3px 0}
+.gaprow .glbl{width:34px;color:var(--muted);flex-shrink:0}
+.gaprow .gbar{flex:1;height:9px;background:#11141a;border-radius:5px;overflow:hidden}
+.gaprow .gbar>i{display:block;height:100%;border-radius:5px}
+.gaprow .gpct{width:38px;text-align:right;font-weight:700}
+.pcolor{font-size:10px;opacity:.62;line-height:1.3;margin-top:2px;word-break:break-word;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.topgrid>*,.trow,.trow>*{min-width:0}
+.trow{overflow:hidden}
+.topctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tgl{background:#1a1d25;border:1px solid var(--line);color:var(--text);padding:5px 13px;border-radius:8px;cursor:pointer;font-size:12.5px;font-family:inherit}
+.tgl.on{background:var(--accent2);color:#0b0d12;border-color:var(--accent2);font-weight:700}
+.tonelist .tonerow2{display:flex;align-items:center;gap:9px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
+.tonelist .tonerow2 .nm{flex:1}
+.tonelist .tonerow2 .pct{font-weight:700;color:var(--accent2);min-width:38px;text-align:right}
+.tonelist .bar{flex:0 0 90px;height:7px}
+/* table */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.controls input,.controls select{background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit}
+.controls input{flex:1;min-width:180px}
+.tablewrap{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel2);cursor:pointer;font-weight:600;font-size:12px;
+  color:var(--muted);user-select:none}
+th:hover{color:var(--text)}
+td.num,th.num{text-align:right}
+tr:hover td{background:rgba(93,208,232,.05)}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;color:#0f1115}
+.swatch-inline{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line);
+  vertical-align:-1px;margin-right:5px}
+.thumb{width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:var(--panel2);display:block}
+.thumb-sm{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid var(--line);background:var(--panel);flex-shrink:0}
+.tlink{color:var(--accent2);text-decoration:none;font-size:12px;white-space:nowrap}
+.tlink:hover{text-decoration:underline}
+td a.nmlink{color:var(--text);text-decoration:none}
+td a.nmlink:hover{color:var(--accent2);text-decoration:underline}
+.tflex{display:flex;align-items:center;gap:9px;min-width:0}
+.trow .tl .nm a{color:var(--text);text-decoration:none}
+.trow .tl .nm a:hover{text-decoration:underline}
+.callout{background:linear-gradient(180deg,rgba(201,138,90,.10),rgba(201,138,90,.02));
+  border:1px solid rgba(201,138,90,.35);border-radius:14px;padding:16px 18px}
+.callout h2{color:var(--accent)}
+.callout ul{margin:10px 0 0;padding-left:18px}
+.callout li{margin:7px 0}
+.rowcount{color:var(--muted);font-size:12px;margin-top:8px}
+.footer{margin-top:46px;color:var(--muted);font-size:12px;text-align:center;border-top:1px solid var(--line);padding-top:18px}
+@media(max-width:980px){
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .row2,.row2b{grid-template-columns:1fr}
+  .scoreboard,.topgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<nav class="sidebar" id="sidebar">
+  <div class="brand">Competitor Radar<small>Nineitiesdesign × Soon</small></div>
+  <div class="navsec">ภาพรวม</div>
+  <a class="navlink" href="#s-brand"><span class="ic">🔎</span>ตัวกรองแบรนด์</a>
+  <a class="navlink" href="#s-period"><span class="ic">🗓️</span>ช่วงเวลา</a>
+  <a class="navlink" href="#s-overview"><span class="ic">📊</span>ภาพรวม KPI</a>
+  <a class="navlink" href="#s-market"><span class="ic">🌐</span>ตลาดรวม</a>
+  <div class="navsec">เปรียบเทียบ</div>
+  <a class="navlink" href="#s-score"><span class="ic">🏆</span>สกอร์บอร์ดแบรนด์</a>
+  <a class="navlink" href="#s-trend"><span class="ic">📈</span>เทรนด์ตามเวลา</a>
+  <a class="navlink" href="#s-cat"><span class="ic">🧥</span>หมวดหมู่</a>
+  <a class="navlink" href="#s-gap"><span class="ic">🎯</span>เรา vs ตลาด</a>
+  <a class="navlink" href="#s-tone"><span class="ic">🎨</span>สี / โทน</a>
+  <a class="navlink" href="#s-price"><span class="ic">💰</span>ช่วงราคา</a>
+  <div class="navsec">รายสินค้า</div>
+  <a class="navlink" href="#s-hero"><span class="ic">🏅</span>Hero / มาแรง</a>
+  <a class="navlink" href="#s-top"><span class="ic">⭐</span>ของขายดี</a>
+  <a class="navlink" href="#s-table"><span class="ic">📋</span>ตารางสินค้า</a>
+  <a class="navlink" href="#s-insight"><span class="ic">💡</span>Action Insights</a>
+</nav>
+<div class="wrap">
+
+  <header>
+    <h1>Competitor Radar <span style="color:var(--accent2)">·</span> <span style="color:var(--accent)">Nineitiesdesign × Soon</span></h1>
+    <div class="sub">เรดาร์คู่แข่ง — เทรนด์สินค้า ราคา สี และของขายดี จาก Shopee · อัปเดตทุกสัปดาห์โดย Momo</div>
+    <div class="tags" id="tags"></div>
+    <div class="mockbar" id="mockbar"></div>
+  </header>
+
+  <!-- BRAND FILTER -->
+  <div class="sec-title" id="s-brand">ตัวกรองแบรนด์</div>
+  <div class="filterbar" id="brandFilter"></div>
+  <div class="filterbar">
+    <button class="btnmini" id="selAll">เลือกทั้งหมด</button>
+    <button class="btnmini" id="selNone">ล้าง</button>
+    <span class="sub" id="filterInfo"></span>
+  </div>
+
+  <!-- PERIOD SELECTOR -->
+  <div class="sec-title" id="s-period">เลือกช่วงเวลาที่ดู</div>
+  <div class="filterbar">
+    <div class="modetoggle">
+      <button class="mbtn active" id="modeWeek">รายสัปดาห์</button>
+      <button class="mbtn" id="modeMonth">รายเดือน</button>
+    </div>
+    <label class="wklabel">👁️ ดูช่วง:&nbsp;<select id="wkSel"></select></label>
+    <label class="wklabel">⚖️ เทียบกับ:&nbsp;<select id="cmpSel"><option value="">— ไม่เทียบ —</option></select></label>
+    <button class="btnmini" id="wkPrev">◀</button>
+    <button class="btnmini" id="wkNext">▶</button>
+    <span class="sub" id="wkInfo"></span>
+  </div>
+
+  <!-- COMPARE PANEL -->
+  <div id="cmpWrap" style="display:none">
+    <div class="sec-title">เทียบช่วง · <span id="cmpTitle" style="color:var(--text)"></span></div>
+    <div class="grid row2b">
+      <div class="panel"><h2>ยอดขายต่อแบรนด์ (เทียบ)</h2><div id="cmpBrands" style="margin-top:10px"></div></div>
+      <div class="panel"><h2>หมวดที่เปลี่ยนแรงสุด</h2><div id="cmpCats" style="margin-top:10px"></div></div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="sec-title" id="s-overview">ภาพรวม · <span id="kpiWkLabel" style="color:var(--accent2)"></span></div>
+  <div class="grid kpis" id="kpis"></div>
+
+  <!-- MARKET OVERVIEW (รวมทุกแบรนด์) -->
+  <div class="sec-title" id="s-market">ภาพรวมตลาดรวม · มองทุกแบรนด์เป็นก้อนเดียว</div>
+  <div class="grid row2">
+    <div class="panel">
+      <h2>ยอดขายตลาดรวม รายสัปดาห์</h2>
+      <div class="chartbox"><canvas id="mktTrend"></canvas><div class="chart-fallback" id="fb_mkt" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+      <div class="note" id="mktNote"></div>
+    </div>
+    <div class="panel">
+      <h2>สัดส่วนหมวดของตลาด</h2>
+      <div class="chartbox"><canvas id="mktCat"></canvas><div class="chart-fallback" id="fb_mktcat" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+    </div>
+  </div>
+  <div class="grid row2b" style="margin-top:14px">
+    <div class="panel">
+      <h2>สัดส่วนช่วงราคาของตลาด</h2>
+      <div class="chartbox" style="height:240px"><canvas id="mktPrice"></canvas><div class="chart-fallback" id="fb_mktprice" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+    </div>
+    <div class="panel">
+      <h2>ส่วนแบ่งตลาด (GMV) รายแบรนด์</h2>
+      <div class="chartbox" style="height:240px"><canvas id="mktShare"></canvas><div class="chart-fallback" id="fb_mktshare" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+    </div>
+  </div>
+
+  <!-- BRAND SCOREBOARD -->
+  <div class="sec-title" id="s-score">สกอร์บอร์ดรายแบรนด์</div>
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <!-- TRENDS -->
+  <div class="sec-title" id="s-trend">เทรนด์ตามเวลา</div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+      <h2>ยอดขาย / มูลค่า / ราคา รายสัปดาห์</h2>
+      <select id="trendMetric" style="background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 11px;font-size:13px">
+        <option value="totMo">ยอดขาย/เดือน (ชิ้น)</option>
+        <option value="gmv">GMV/เดือน (฿)</option>
+        <option value="avgPrice">ราคาขายเฉลี่ย (฿)</option>
+        <option value="avgDisc">ส่วนลดเฉลี่ย (%)</option>
+      </select>
+    </div>
+    <div class="chartbox tall"><canvas id="trendChart"></canvas><div class="chart-fallback" id="fb_trend" style="display:none">⚠️ กราฟต้องต่อเน็ต (Chart.js)</div></div>
+    <div class="note" id="trendNote"></div>
+  </div>
+
+  <!-- CATEGORY -->
+  <div class="sec-title" id="s-cat">เทียบหมวดหมู่ข้ามแบรนด์</div>
+  <div class="grid row2">
+    <div class="panel">
+      <h2>ยอดขาย/เดือน ตามหมวด × แบรนด์</h2>
+      <div class="chartbox tall"><canvas id="catChart"></canvas><div class="chart-fallback" id="fb_cat" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+    </div>
+    <div class="panel">
+      <h2>หมวดไหนใครครอง</h2>
+      <div class="note" style="border:0;padding:0;margin:0 0 8px">หมวดที่ทำยอดสูงสุด และเจ้าตลาดของหมวดนั้น</div>
+      <div id="catLeaders"></div>
+    </div>
+  </div>
+
+  <!-- GAP: เรา vs ตลาด -->
+  <div class="sec-title" id="s-gap">🎯 ช่องว่างของ Nineitiesdesign เทียบตลาด</div>
+  <div class="panel">
+    <div class="note">เทียบ<b>สัดส่วนยอดขาย/เดือนต่อหมวด</b>ของ <b style="color:#fff">Nineitiesdesign (เรา)</b> กับตลาด (คู่แข่งที่เลือกไว้) — เรียงจากหมวดที่ <b>ตลาดขายดีแต่เรายังน้อย/ไม่มี = โอกาสพัฒนา</b> ลงมา</div>
+    <div id="gapList" style="margin-top:14px"></div>
+  </div>
+
+  <!-- COLOR / TONE -->
+  <div class="sec-title" id="s-tone">เทียบสีจริงข้ามแบรนด์ <span id="toneStatus" class="sub" style="text-transform:none;letter-spacing:0;font-weight:400"></span></div>
+  <div class="panel" style="margin-bottom:14px">
+    <div class="note">จานสีดึงจาก<b>รูปสินค้าจริง</b> (สีเด่นกลางภาพ) — แต่ละช่องคือ<b>เฉดสีจริง</b> กว้างตามสัดส่วนยอดขาย เอาเมาส์ชี้เพื่อดูรหัสสี/จำนวนรุ่น</div>
+  </div>
+  <div class="grid row2b">
+    <div class="panel">
+      <h2>จานสีจริงแต่ละแบรนด์</h2>
+      <div id="toneBrands" style="margin-top:10px"></div>
+    </div>
+    <div class="panel">
+      <h2>เฉดสีขายดีรวมทั้งตลาด</h2>
+      <div id="toneTotList" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- PRICE -->
+  <div class="sec-title" id="s-price">เทียบช่วงราคา</div>
+  <div class="panel">
+    <h2>ยอดขาย/เดือน ตามช่วงราคา × แบรนด์</h2>
+    <div class="chartbox"><canvas id="priceChart"></canvas><div class="chart-fallback" id="fb_price" style="display:none">⚠️ กราฟต้องต่อเน็ต</div></div>
+    <div class="note">ดูว่าแต่ละแบรนด์ทำเงินที่ช่วงราคาไหน — sweet spot ราคาของตลาด</div>
+  </div>
+
+  <!-- HERO vs มาแรง -->
+  <div class="sec-title" id="s-hero">ของเด็ดประจำแบรนด์ vs มาแรงเดือนนี้</div>
+  <div class="grid row2b">
+    <div class="panel">
+      <h2>🏅 Hero — ขายดีสะสมสูงสุด</h2>
+      <div class="note" style="margin-bottom:8px">รุ่นที่ขายดีสะสมระยะยาว (lifetime) — ของเด็ดที่ทำเงินมานาน</div>
+      <div id="heroList"></div>
+    </div>
+    <div class="panel">
+      <h2>🔥 มาแรงเดือนนี้ — ขาย/เดือนสูงสุด</h2>
+      <div class="note" style="margin-bottom:8px">รุ่นที่ยอดเดือนนี้พุ่ง — เทรนด์ที่กำลังมา</div>
+      <div id="hotList"></div>
+    </div>
+  </div>
+
+  <!-- TOP SELLERS -->
+  <div class="sec-title" id="s-top">ของขายดี Top 5 รายแบรนด์</div>
+  <div class="topctrl" style="margin-bottom:12px">
+    <span class="sub" style="font-size:12px">เรียงตาม:</span>
+    <button class="tgl on" onclick="setTopMetric('mo',this)">ขาย/เดือน</button>
+    <button class="tgl" onclick="setTopMetric('life',this)">ยอดสะสม</button>
+    <button class="tgl" onclick="setTopMetric('gmv',this)">GMV</button>
+  </div>
+  <div class="topgrid" id="topSellers"></div>
+
+  <!-- TABLE -->
+  <div class="sec-title" id="s-table">ตารางสินค้าทั้งหมด</div>
+  <div class="panel">
+    <div class="controls">
+      <input id="search" placeholder="ค้นหาชื่อ / โค้ด / ชื่อสี…">
+      <select id="fCat"><option value="">ทุกหมวด</option></select>
+      <select id="fSize"><option value="">ทุกไซส์</option></select>
+      <select id="fTone"><option value="">ทุกโทนสี</option></select>
+      <select id="fStatus"><option value="">ทุกสถานะ</option></select>
+    </div>
+    <div class="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <div class="rowcount" id="rowcount"></div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="sec-title" id="s-insight">นำไปใช้กับ Nineitiesdesign / Soon</div>
+  <div class="callout">
+    <h2>⚡ Action Insights</h2>
+    <ul id="insights"></ul>
+  </div>
+
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+function boot(){
+  const D = window.DASHBOARD_DATA;
+  const HAS_CHART = typeof Chart !== 'undefined';
+  if(HAS_CHART){
+    Chart.defaults.font.family='"Sarabun",-apple-system,system-ui,sans-serif';
+    Chart.defaults.color='#9aa3b2';
+    Chart.defaults.plugins.legend.labels.boxWidth=12;
+  }
+  const BRANDS = D.brands;
+  const BMAP = Object.fromEntries(BRANDS.map(b=>[b.id,b]));
+  const TONES = D.tones;
+  const charts = {};
+  let active = new Set(BRANDS.map(b=>b.id));
+  // ----- ช่วงเวลา: สลับ "สัปดาห์ (ทุก 7 วัน)" / "เดือน (รวมสัปดาห์ในเดือน)" -----
+  let mode='week';
+  const MOi=(p,i)=>(p.moH&&p.moH[i]!=null)?p.moH[i]:p.mo;   // ยอดขาย SKU ในสัปดาห์ index i
+  function buildPeriods(){
+    if(mode==='month'){
+      const g={};
+      D.meta.weeks.forEach((w,i)=>{const k=(D.meta.weekMonth||[])[i]||'?';(g[k]=g[k]||[]).push(i);});
+      const arr=Object.keys(g).sort().map(k=>({key:k,label:(D.meta.monthLabel||{})[k]||k,wk:g[k]}));
+      // เดือนหัว/ท้ายของช่วงข้อมูล = ไม่ครบทั้งเดือน (เทียบยอดรวมตรงๆ จะเพี้ยน)
+      arr.forEach((p,i)=>p.partial=(i===0||i===arr.length-1));
+      return arr;
+    }
+    return D.meta.weeks.map((w,i)=>({key:w,label:(D.meta.weekLabels||D.meta.weeks)[i],wk:[i],partial:false}));
+  }
+  let PER=buildPeriods();
+  let selIndex=PER.length-1;     // ช่วงที่กำลังดู
+  let cmpIndex=null;             // ช่วงฐานที่เทียบ (null = ไม่เทียบ)
+  const curPer=()=>PER[selIndex];
+  const refPer=()=>PER[cmpIndex!=null?cmpIndex:Math.max(0,selIndex-1)];
+  const MOp=(p,per)=>per.wk.reduce((s,i)=>s+MOi(p,i),0);     // ยอดขาย SKU รวมทั้งช่วง
+  const MO=p=>MOp(p,curPer());
+  // ยอดรวมของแบรนด์ในช่วง (จาก trends)
+  function perTot(bid,per,f){
+    const tr=D.trends[bid]; if(!tr) return 0;
+    if(f==='totMo'||f==='gmv') return per.wk.reduce((s,i)=>s+(tr[i]?.[f]||0),0);
+    if(f==='avgDisc'){const t=per.wk.reduce((s,i)=>s+(tr[i]?.totMo||0),0)||1;
+      return per.wk.reduce((s,i)=>s+(tr[i]?.avgDisc||0)*(tr[i]?.totMo||0),0)/t;}
+    const v=per.wk.map(i=>tr[i]?.[f]||0); return v.reduce((a,b)=>a+b,0)/v.length;
+  }
+  const perSum=(per,f)=>[...active].reduce((s,b)=>s+perTot(b,per,f),0);
+  const PL=p=>p.label+(p.partial?' *':'');   // ติดดอกจันถ้าเดือนข้อมูลไม่ครบ
+
+  // ---------- helpers ----------
+  const nf = n => (n||0).toLocaleString('en-US');
+  const money = n => { n=n||0;
+    if(n>=1e6) return '฿'+(n/1e6).toFixed(2)+'M';
+    if(n>=1e3) return '฿'+(n/1e3).toFixed(0)+'k';
+    return '฿'+Math.round(n); };
+  const pct = (a,b)=> b? ((a-b)/b*100):0;
+  const arrow = v => v>0.5?`<span class="up">▲ ${v.toFixed(1)}%</span>`:(v<-0.5?`<span class="down">▼ ${Math.abs(v).toFixed(1)}%</span>`:`<span class="flat">– ${v.toFixed(1)}%</span>`);
+  const prods = ()=> D.products.filter(p=>active.has(p.brand));
+  // thumbnail: ใช้รูปจริงถ้ามี (img); ไม่งั้นสร้าง placeholder SVG จากโทนสี+หมวด (offline-proof)
+  function thumbSrc(p){
+    if(p.img) return p.img;
+    const c=p.color||'#444';
+    const svg="<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='"+c+"'/><text x='32' y='37' font-size='10' fill='rgba(0,0,0,.55)' text-anchor='middle' font-family='sans-serif'>"+p.cat+"</text></svg>";
+    return "data:image/svg+xml,"+encodeURIComponent(svg);
+  }
+  const safeUrl = p => p.url || ('https://shopee.co.th/search?keyword='+encodeURIComponent(p.name));
+  const esc = s => (''+(s||'')).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  // ถ้ารูปจริงโหลดไม่ขึ้น (เช่นลิงก์ Shopee หมดอายุ) สลับไป placeholder อัตโนมัติ
+  window.imgErr=function(el){el.onerror=null;const c=el.getAttribute('data-c')||'#444',cat=el.getAttribute('data-cat')||'';
+    el.src="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' fill='"+c+"'/><text x='32' y='37' font-size='10' fill='rgba(0,0,0,.55)' text-anchor='middle' font-family='sans-serif'>"+cat+"</text></svg>");};
+  // คลิกรูป → เด้ง popup รูปใหญ่ + ปุ่มเปิด Shopee
+  window.lb=function(el){
+    const o=document.getElementById('lightbox'), im=document.getElementById('lbImg');
+    im.setAttribute('data-c',el.getAttribute('data-c')||'#444');
+    im.setAttribute('data-cat',el.getAttribute('data-cat')||'');
+    im.onerror=function(){imgErr(im);};
+    im.src=el.getAttribute('data-full')||el.src;
+    document.getElementById('lbName').textContent=el.getAttribute('data-name')||'';
+    const lk=document.getElementById('lbLink'), url=el.getAttribute('data-url')||'';
+    if(url){lk.href=url;lk.style.display='';}else lk.style.display='none';
+    o.classList.add('on');
+  };
+  window.closeLb=function(e){ if(e&&e.currentTarget&&e.target!==e.currentTarget) return;
+    document.getElementById('lightbox').classList.remove('on'); };
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=document.getElementById('lightbox');if(o)o.classList.remove('on');}});
+  const fb = (id,on)=>{const e=document.getElementById(id); if(e) e.style.display=on?'flex':'none';};
+  function mkChart(key,canvasId,cfg){
+    if(!HAS_CHART){return;}
+    if(charts[key]) charts[key].destroy();
+    charts[key]=new Chart(document.getElementById(canvasId),cfg);
+  }
+
+  // ---------- header ----------
+  function header(){
+    const t=document.getElementById('tags');
+    t.innerHTML=[
+      `📅 ${D.meta.weekLabel}`,
+      `🏷️ ${BRANDS.length} แบรนด์`,
+      `📦 ${D.products.length} SKU`,
+      `🛒 ${D.meta.source}`,
+      `ราคา = หลังลด`
+    ].map(x=>`<span class="tag">${x}</span>`).join('');
+    const mb=document.getElementById('mockbar');
+    if(D.meta.isMock){ mb.innerHTML='🧪 <b>ข้อมูลตัวอย่าง (MOCK)</b> — '+D.meta.note; }
+    else mb.style.display='none';
+  }
+
+  // ---------- brand filter ----------
+  function buildFilter(){
+    const fb=document.getElementById('brandFilter');
+    fb.innerHTML=BRANDS.map(b=>
+      `<div class="bchip" data-b="${b.id}"><span class="dot" style="background:${b.color}"></span>${b.name}<span class="sub" style="font-size:11px">· ${b.segment}</span></div>`
+    ).join('');
+    fb.querySelectorAll('.bchip').forEach(c=>{
+      c.onclick=()=>{const id=c.dataset.b;
+        if(active.has(id)) active.delete(id); else active.add(id);
+        if(active.size===0) active.add(id); // never empty
+        syncFilter(); renderAll();};
+    });
+    document.getElementById('selAll').onclick=()=>{active=new Set(BRANDS.map(b=>b.id));syncFilter();renderAll();};
+    document.getElementById('selNone').onclick=()=>{active=new Set([BRANDS[0].id]);syncFilter();renderAll();};
+    syncFilter();
+  }
+  function syncFilter(){
+    document.querySelectorAll('.bchip').forEach(c=>c.classList.toggle('off',!active.has(c.dataset.b)));
+    document.getElementById('filterInfo').textContent=`กำลังดู ${active.size}/${BRANDS.length} แบรนด์`;
+  }
+
+  // ---------- market overview (all brands as one) ----------
+  const PAL=['#c98a5a','#5dd0e8','#34d399','#fbbf24','#f87171','#a78bfa','#e08aa8','#7aa6d6','#6b7280'];
+  function marketOverview(){
+    fb('fb_mkt',!HAS_CHART);fb('fb_mktcat',!HAS_CHART);fb('fb_mktprice',!HAS_CHART);fb('fb_mktshare',!HAS_CHART);
+    const P=prods();
+    // combined market trend = sum of brand totals per period (week/month)
+    const sums=PER.map(per=>perSum(per,'totMo'));
+    mkChart('mkt','mktTrend',{type:'line',
+      data:{labels:PER.map(p=>p.label),datasets:[{label:'ตลาดรวม',data:sums,
+        borderColor:'#5dd0e8',backgroundColor:'rgba(93,208,232,.15)',borderWidth:2.6,tension:.3,fill:true,
+        pointRadius:sums.map((_,i)=>i===selIndex?6:(i===cmpIndex?5:2.5)),
+        pointBackgroundColor:sums.map((_,i)=>i===selIndex?'#5dd0e8':(i===cmpIndex?'#fbbf24':'#5dd0e8'))}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{y:{grid:{color:'#2c313c'}},x:{grid:{display:false}}}}});
+    const rIdx=cmpIndex!=null?cmpIndex:Math.max(0,selIndex-1);
+    const wow=pct(sums[selIndex],sums[rIdx]), six=pct(sums[selIndex],sums[0]);
+    const unit=mode==='month'?'เดือน':'สัปดาห์';
+    document.getElementById('mktNote').innerHTML=
+      `ยอดขายตลาดรวม <b>${nf(sums[selIndex])}</b> ชิ้น (${PL(curPer())}) · เทียบ${unit}ก่อน ${arrow(wow)} · ตั้งแต่ ${PER[0].label} ${arrow(six)}`;
+    // category mix doughnut
+    const catM={};P.forEach(p=>catM[p.cat]=(catM[p.cat]||0)+MO(p));
+    const cs=Object.entries(catM).sort((a,b)=>b[1]-a[1]);
+    const tp=cs.slice(0,8), oth=cs.slice(8).reduce((s,x)=>s+x[1],0);
+    mkChart('mktcat','mktCat',{type:'doughnut',
+      data:{labels:tp.map(x=>x[0]).concat(oth>0?['อื่นๆ']:[]),
+        datasets:[{data:tp.map(x=>x[1]).concat(oth>0?[oth]:[]),backgroundColor:PAL,borderColor:'#191c23',borderWidth:2}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}}}}});
+    // price mix doughnut
+    const bands=[['<฿300',0,299],['฿300–499',300,499],['฿500–699',500,699],['฿700–999',700,999],['฿1,000–1,499',1000,1499],['฿1,500+',1500,1e9]];
+    mkChart('mktprice','mktPrice',{type:'doughnut',
+      data:{labels:bands.map(x=>x[0]),datasets:[{data:bands.map(([_,lo,hi])=>P.filter(p=>p.price>=lo&&p.price<=hi).reduce((s,p)=>s+MO(p),0)),
+        backgroundColor:PAL,borderColor:'#191c23',borderWidth:2}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}}}}});
+    // market share by GMV
+    const actB=BRANDS.filter(b=>active.has(b.id));
+    mkChart('mktshare','mktShare',{type:'doughnut',
+      data:{labels:actB.map(b=>b.name),datasets:[{data:actB.map(b=>D.products.filter(p=>p.brand===b.id).reduce((s,p)=>s+p.price*MO(p),0)),
+        backgroundColor:actB.map(b=>b.color),borderColor:'#191c23',borderWidth:2}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}}}}});
+  }
+
+  // ---------- KPI ----------
+  function kpis(){
+    const P=prods();
+    const totMo=P.reduce((s,p)=>s+MO(p),0);
+    const gmv=P.reduce((s,p)=>s+p.price*MO(p),0);
+    const avgP=P.length?Math.round(P.reduce((s,p)=>s+p.price,0)/P.length):0;
+    const wDisc=totMo?(P.reduce((s,p)=>s+p.disc*MO(p),0)/totMo):0;
+    const cats=new Set(P.map(p=>p.cat)).size;
+    // เทียบกับช่วงก่อนหน้า (หรือช่วงฐานที่เลือกเทียบ)
+    const cur=curPer(), ref=refPer();
+    const moWoW=pct(perSum(cur,'totMo'),perSum(ref,'totMo'));
+    const gmvWoW=pct(perSum(cur,'gmv'),perSum(ref,'gmv'));
+    const lab='vs '+ref.label;
+    const cards=[
+      ['SKU ที่ขายอยู่',nf(P.filter(p=>MO(p)>0).length),''],
+      ['ยอดขายรวม/เดือน',nf(totMo)+' ชิ้น',arrow(moWoW)+' '+lab],
+      ['GMV/เดือน',money(gmv),arrow(gmvWoW)+' '+lab],
+      ['ราคาขายเฉลี่ย','฿'+nf(avgP),''],
+      ['ส่วนลดเฉลี่ย (ถ.น.น.ยอด)',wDisc.toFixed(1)+'%',''],
+      ['หมวดสินค้า',cats+' หมวด',''],
+    ];
+    document.getElementById('kpis').innerHTML=cards.map(c=>
+      `<div class="panel kpi"><div class="l">${c[0]}</div><div class="v">${c[1]}</div><div class="d">${c[2]}</div></div>`).join('');
+  }
+
+  // ---------- brand scoreboard ----------
+  function scoreboard(){
+    const el=document.getElementById('scoreboard');
+    el.innerHTML=BRANDS.filter(b=>active.has(b.id)).map(b=>{
+      const P=D.products.filter(p=>p.brand===b.id);
+      const totMo=P.reduce((s,p)=>s+MO(p),0);
+      const gmv=P.reduce((s,p)=>s+p.price*MO(p),0);
+      const avgP=Math.round(P.reduce((s,p)=>s+p.price,0)/P.length);
+      const rating=(P.reduce((s,p)=>s+p.rating,0)/P.length).toFixed(2);
+      // top category
+      const catM={}; P.forEach(p=>catM[p.cat]=(catM[p.cat]||0)+MO(p));
+      const topCat=Object.entries(catM).sort((a,b)=>b[1]-a[1])[0];
+      const wow=pct(perTot(b.id,curPer(),'totMo'),perTot(b.id,refPer(),'totMo'));
+      return `<div class="bcard" style="border-left-color:${b.color}">
+        <div class="bn"><span class="dot" style="width:11px;height:11px;border-radius:50%;background:${b.color}"></span>${b.name}
+          <span class="seg">· ${b.segment}</span></div>
+        <div class="metrics">
+          <div class="m"><div class="mv">${nf(totMo)}</div><div class="ml">ยอดขาย/เดือน ${arrow(wow)}</div></div>
+          <div class="m"><div class="mv">${money(gmv)}</div><div class="ml">GMV/เดือน</div></div>
+          <div class="m"><div class="mv">฿${nf(avgP)}</div><div class="ml">ราคาเฉลี่ย</div></div>
+          <div class="m"><div class="mv">★ ${rating}</div><div class="ml">เรตติ้งเฉลี่ย</div></div>
+          <div class="m"><div class="mv">${topCat[0]}</div><div class="ml">หมวดทำเงิน</div></div>
+          <div class="m"><div class="mv">${P.length}</div><div class="ml">จำนวน SKU</div></div>
+        </div>
+        <div class="sparkwrap"><canvas id="spark_${b.id}"></canvas></div>
+      </div>`;
+    }).join('');
+    // sparklines
+    if(HAS_CHART) BRANDS.filter(b=>active.has(b.id)).forEach(b=>{
+      const sd=PER.map(per=>perTot(b.id,per,'totMo'));
+      new Chart(document.getElementById('spark_'+b.id),{type:'line',
+        data:{labels:PER.map(p=>p.label),datasets:[{data:sd,
+          borderColor:b.color,borderWidth:2,tension:.35,fill:false,
+          pointRadius:sd.map((_,i)=>i===selIndex?3.5:0),
+          pointBackgroundColor:b.color}]},
+        options:{plugins:{legend:{display:false},tooltip:{enabled:false}},
+          scales:{x:{display:false},y:{display:false}},maintainAspectRatio:false}});
+    });
+  }
+
+  // ---------- trends ----------
+  function trends(){
+    const metric=document.getElementById('trendMetric').value;
+    fb('fb_trend',!HAS_CHART);
+    const ds=BRANDS.filter(b=>active.has(b.id)).map(b=>({
+      label:b.name,borderColor:b.color,backgroundColor:b.color,
+      data:PER.map(per=>Math.round(perTot(b.id,per,metric))),borderWidth:2.4,
+      pointRadius:PER.map((_,i)=>i===selIndex?5:3),tension:.3,fill:false}));
+    mkChart('trend','trendChart',{type:'line',
+      data:{labels:PER.map(p=>p.label),datasets:ds},
+      options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{position:'bottom'}},
+        scales:{y:{grid:{color:'#2c313c'}},x:{grid:{display:false}}}}});
+    // note: biggest mover over the whole range
+    let best=null;
+    BRANDS.filter(b=>active.has(b.id)).forEach(b=>{
+      const v=pct(perTot(b.id,PER[PER.length-1],'totMo'),perTot(b.id,PER[0],'totMo'));
+      if(!best||Math.abs(v)>Math.abs(best.v)) best={n:b.name,v};});
+    const unit=mode==='month'?'เดือน':'สัปดาห์';
+    document.getElementById('trendNote').innerHTML= best?
+      `เคลื่อนไหวแรงสุดตลอด ${PER.length} ${unit}: <b>${best.n}</b> ${arrow(best.v)} (ยอดขาย)`:'';
+  }
+
+  // ---------- category compare ----------
+  function categories(){
+    fb('fb_cat',!HAS_CHART);
+    const P=prods();
+    const catTot={}; P.forEach(p=>catTot[p.cat]=(catTot[p.cat]||0)+MO(p));
+    const cats=Object.entries(catTot).sort((a,b)=>b[1]-a[1]).slice(0,12).map(x=>x[0]);
+    const ds=BRANDS.filter(b=>active.has(b.id)).map(b=>({
+      label:b.name,backgroundColor:b.color,
+      data:cats.map(c=>D.products.filter(p=>p.brand===b.id&&p.cat===c).reduce((s,p)=>s+MO(p),0))}));
+    mkChart('cat','catChart',{type:'bar',
+      data:{labels:cats,datasets:ds},
+      options:{indexAxis:'y',maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom'}},
+        scales:{x:{stacked:true,grid:{color:'#2c313c'}},y:{stacked:true,grid:{display:false}}}}});
+    // leaders
+    const lead=Object.entries(catTot).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([c,tot])=>{
+      const byB={}; P.filter(p=>p.cat===c).forEach(p=>byB[p.brand]=(byB[p.brand]||0)+MO(p));
+      const top=Object.entries(byB).sort((a,b)=>b[1]-a[1])[0];
+      const b=BMAP[top[0]];
+      const share=(top[1]/tot*100).toFixed(0);
+      return `<div class="trow"><div class="tl"><span class="nm">${c}</span>
+        <span class="mo">${nf(tot)} ชิ้น</span></div>
+        <div class="bar"><span style="width:${share}%;background:${b.color}"></span></div>
+        <div class="sub" style="font-size:11px;margin-top:2px">เจ้าตลาด: <b style="color:${b.color}">${b.name}</b> ${share}%</div></div>`;
+    }).join('');
+    document.getElementById('catLeaders').innerHTML=lead;
+  }
+
+  // ---------- tone compare ----------
+  // HSL จาก rgb (0-255)
+  function hslOf(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;if(d){s=l>0.5?d/(2-mx-mn):d/(mx+mn);if(mx===r)h=60*(((g-b)/d)%6);else if(mx===g)h=60*((b-r)/d+2);else h=60*((r-g)/d+4);}if(h<0)h+=360;return[h,s,l];}
+  // จับสีจริงของสินค้าเป็นกลุ่มเฉด (cluster) — ถ่วงน้ำหนักด้วยยอดขาย, เรียงตามเฉด
+  function clusterColors(prods){
+    const items=prods.filter(p=>p.hex); const bk={}; let tot=0;
+    items.forEach(p=>{const w=Math.max(MO(p),1);tot+=w;const[r,g,b]=hexToRgb(p.hex);const[h,s,l]=hslOf(r,g,b);
+      const key=s<0.16?('N'+(l<0.28?0:l>0.74?2:1)):('H'+Math.floor(h/30)+(l<0.45?'d':'l'));
+      const o=bk[key]||(bk[key]={w:0,n:0,r:0,g:0,b:0,h,l});o.w+=w;o.n++;o.r+=r*w;o.g+=g*w;o.b+=b*w;});
+    let arr=Object.keys(bk).map(k=>{const o=bk[k];return{hex:rgbToHex(o.r/o.w,o.g/o.w,o.b/o.w),w:o.w,n:o.n,neutral:k[0]==='N',h:o.h,l:o.l};});
+    arr=arr.filter(o=>o.w/(tot||1)>=0.012);
+    arr.sort((a,b)=>a.neutral!==b.neutral?(a.neutral?1:-1):(a.neutral?b.l-a.l:a.h-b.h));
+    return {arr,tot:tot||1};
+  }
+  function tones(){
+    const actB=BRANDS.filter(b=>active.has(b.id));
+    // จานสีจริงแต่ละแบรนด์ — แถบสีจริงเรียงตามเฉด, กว้างตามยอดขาย
+    document.getElementById('toneBrands').innerHTML=actB.map(b=>{
+      const {arr,tot}=clusterColors(D.products.filter(p=>p.brand===b.id));
+      if(!arr.length) return `<div class="tonerow"><div class="tl"><span class="nm">${b.name}</span><span class="sub">— กำลังวิเคราะห์รูป —</span></div><div class="tonebar palbar"></div></div>`;
+      const bar=arr.map(o=>`<span style="width:${(o.w/tot*100).toFixed(1)}%;background:${o.hex}" title="${o.hex} · ${o.n} รุ่น · ${(o.w/tot*100).toFixed(0)}% ของยอดขาย"></span>`).join('');
+      const top=arr.reduce((a,c)=>c.w>a.w?c:a,arr[0]);
+      return `<div class="tonerow"><div class="tl"><span class="nm">${b.name}</span>
+        <span class="sub">เฉดเด่น <span class="swbox" style="background:${top.hex}"></span> ${(top.w/tot*100).toFixed(0)}% · ${arr.length} เฉด</span></div>
+        <div class="tonebar palbar">${bar}</div></div>`;
+    }).join('');
+    // จานสีขายดีรวมทั้งตลาด — swatch ใหญ่เรียงตามยอด
+    const {arr,tot}=clusterColors(prods());
+    const ov=document.getElementById('toneTotList');
+    if(!arr.length){ov.innerHTML='<div class="note">— กำลังวิเคราะห์รูป —</div>';return;}
+    const top=[...arr].sort((a,b)=>b.w-a.w).slice(0,12);
+    ov.innerHTML='<div class="palgrid">'+top.map(o=>
+      `<div class="palcell" title="${o.hex} · ${o.n} รุ่น"><span class="palsw" style="background:${o.hex}"></span><span class="pallbl">${(o.w/tot*100).toFixed(0)}%</span></div>`).join('')+'</div>';
+  }
+
+  // ---------- price bands ----------
+  function prices(){
+    fb('fb_price',!HAS_CHART);
+    const bands=[['<฿300',0,299],['฿300–499',300,499],['฿500–699',500,699],
+      ['฿700–999',700,999],['฿1,000–1,499',1000,1499],['฿1,500+',1500,1e9]];
+    const actB=BRANDS.filter(b=>active.has(b.id));
+    const ds=actB.map(b=>({label:b.name,backgroundColor:b.color,
+      data:bands.map(([_,lo,hi])=>D.products.filter(p=>p.brand===b.id&&p.price>=lo&&p.price<=hi).reduce((s,p)=>s+MO(p),0))}));
+    mkChart('price','priceChart',{type:'bar',
+      data:{labels:bands.map(x=>x[0]),datasets:ds},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},
+        scales:{x:{grid:{display:false}},y:{grid:{color:'#2c313c'}}}}});
+  }
+
+  // ตัดชื่อสีให้สั้น (โชว์ 6 สีแรก + นับที่เหลือ) กันล้นการ์ด
+  const colShort=s=>{const a=(s||'').split(',').map(x=>x.trim()).filter(Boolean);return a.length>6?a.slice(0,6).join(', ')+' …+'+(a.length-6)+' สี':a.join(', ');};
+  // ---------- top sellers (สลับเกณฑ์ได้) ----------
+  let topMetric='mo';
+  const tVal=p=>topMetric==='life'?(p.life||0):topMetric==='gmv'?(p.gmv||0):MO(p);
+  const tLbl=v=>topMetric==='gmv'?'฿'+nf(v):nf(v);
+  window.setTopMetric=function(m,btn){topMetric=m;document.querySelectorAll('.topctrl .tgl').forEach(x=>x.classList.remove('on'));btn.classList.add('on');topSellers();};
+  function pcard(p,b,val,max,label){
+    return `<div class="trow"><div class="tflex" style="margin-bottom:4px">
+      <img class="thumb-sm" loading="lazy" src="${thumbSrc(p)}" data-full="${p.img||''}" data-url="${safeUrl(p)}" data-name="${esc(p.name)}" data-c="${p.color}" data-cat="${p.cat}" onerror="imgErr(this)" onclick="lb(this)" alt="">
+      <div style="flex:1;min-width:0">
+        <div class="tl"><span class="nm"><a href="${safeUrl(p)}" target="_blank" rel="noopener" title="${p.name}">${p.name}</a></span>
+        <span class="mo">${label}</span></div>
+        <div class="bar"><span style="width:${Math.round(val/max*100)}%;background:${b.color}"></span></div>
+        <div class="sub" style="font-size:11px;margin-top:2px">${p.cat} · ${p.size||'—'} · ฿${nf(p.price)} · ★${p.rating} · สะสม ${nf(p.life)}</div>
+        ${p.colors?`<div class="pcolor" title="${esc(p.colors)}">🎨 ${esc(colShort(p.colors))}</div>`:''}
+      </div></div></div>`;
+  }
+  function topSellers(){
+    const el=document.getElementById('topSellers');
+    el.innerHTML=BRANDS.filter(b=>active.has(b.id)).map(b=>{
+      const P=D.products.filter(p=>p.brand===b.id).sort((a,c)=>tVal(c)-tVal(a)).slice(0,5);
+      const max=P[0]?tVal(P[0]):1;
+      return `<div class="tpanel"><h3><span class="dot" style="width:10px;height:10px;border-radius:50%;background:${b.color}"></span>${b.name}</h3>
+        ${P.map(p=>pcard(p,b,tVal(p),max,tLbl(tVal(p)))).join('')}</div>`;
+    }).join('');
+  }
+  // ---------- Gap: Nineitiesdesign vs ตลาด ----------
+  function gapAnalysis(){
+    const ME='nineties', box=document.getElementById('gapList');
+    const mine=D.products.filter(p=>p.brand===ME);
+    const market=prods().filter(p=>p.brand!==ME);
+    if(!mine.length){box.innerHTML='<div class="note">— ยังไม่มีข้อมูล Nineitiesdesign —</div>';return;}
+    const cats=[...new Set(D.products.map(p=>p.cat))];
+    const sumc=(arr,c)=>arr.filter(p=>p.cat===c).reduce((s,p)=>s+MO(p),0);
+    const myTot=mine.reduce((s,p)=>s+MO(p),0)||1, mkTot=market.reduce((s,p)=>s+MO(p),0)||1;
+    let rows=cats.map(c=>{
+      const mk=sumc(market,c)/mkTot*100, my=sumc(mine,c)/myTot*100;
+      return {c,mk,my,myN:mine.filter(p=>p.cat===c).length,mkN:market.filter(p=>p.cat===c).length,gap:mk-my};
+    }).filter(r=>r.mkN>0);
+    rows.sort((a,b)=>b.gap-a.gap);
+    const mx=Math.max(...rows.map(r=>Math.max(r.mk,r.my)),1);
+    box.innerHTML=rows.map(r=>{
+      let tag,col;
+      if(r.myN===0){tag='ยังไม่มี — โอกาส';col='#f87171';}
+      else if(r.gap>3){tag='ควรเพิ่ม';col='#fbbf24';}
+      else if(r.my>r.mk+2){tag='เราเด่น';col='#34d399';}
+      else{tag='พอดี';col='#9aa3b2';}
+      return `<div class="gaprow"><div class="gl"><span class="gc">${r.c}</span>
+        <span class="gtag" style="background:${col}22;color:${col}">${tag} · เรามี ${r.myN} รุ่น</span></div>
+        <div class="gb"><span class="glbl">ตลาด</span><span class="gbar"><i style="width:${r.mk/mx*100}%;background:#5dd0e8"></i></span><span class="gpct">${r.mk.toFixed(0)}%</span></div>
+        <div class="gb"><span class="glbl">เรา</span><span class="gbar"><i style="width:${r.my/mx*100}%;background:#fff"></i></span><span class="gpct">${r.my.toFixed(0)}%</span></div></div>`;
+    }).join('');
+  }
+  // ---------- Hero vs มาแรง (ทั้งตลาด เฉพาะแบรนด์ที่เลือก) ----------
+  function heroes(){
+    const P=prods();
+    const hero=[...P].sort((a,b)=>(b.life||0)-(a.life||0)).slice(0,10);
+    const hmax=hero[0]?(hero[0].life||1):1;
+    document.getElementById('heroList').innerHTML=hero.map(p=>pcard(p,BMAP[p.brand],p.life||0,hmax,nf(p.life)+' สะสม')).join('')||'<div class="note">— ไม่มีข้อมูล —</div>';
+    const hot=[...P].sort((a,b)=>MO(b)-MO(a)).slice(0,10);
+    const tmax=hot[0]?(MO(hot[0])||1):1;
+    document.getElementById('hotList').innerHTML=hot.map(p=>pcard(p,BMAP[p.brand],MO(p),tmax,nf(MO(p))+'/ด.')).join('')||'<div class="note">— ไม่มีข้อมูล —</div>';
+  }
+
+  // ---------- table ----------
+  let sortK='mo',sortDir=-1;
+  const COLS=[['brand','แบรนด์',0],['code','โค้ด',0],['name','ชื่อสินค้า',0],['cat','หมวด',0],
+    ['size','ไซส์',0],['tone','สี',0],['price','ราคาขาย',1],
+    ['mo','ขาย/เดือน',1],['life','ยอดสะสม',1],['gmv','GMV/ด.',1],['rating','★',1],['status','สถานะ',0]];
+  function buildTableHead(){
+    document.querySelector('#tbl thead').innerHTML='<tr><th>รูป</th>'+COLS.map(c=>
+      `<th class="${c[2]?'num':''}" data-k="${c[0]}">${c[1]}</th>`).join('')+'<th>ลิงก์</th></tr>';
+    document.querySelectorAll('#tbl th[data-k]').forEach(th=>th.onclick=()=>{
+      const k=th.dataset.k; if(sortK===k) sortDir*=-1; else {sortK=k;sortDir=(COLS.find(c=>c[0]===k)[2]?-1:1);}
+      table();});
+    // filter dropdowns
+    const cats=[...new Set(D.products.map(p=>p.cat))].sort();
+    document.getElementById('fCat').innerHTML='<option value="">ทุกหมวด</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+    const szs=[...new Set(D.products.map(p=>p.size).filter(s=>s&&s!=='—'&&s!=='-'))].sort();
+    document.getElementById('fSize').innerHTML='<option value="">ทุกไซส์</option>'+szs.map(c=>`<option>${c}</option>`).join('');
+    const tns=Object.keys(TONES);
+    document.getElementById('fTone').innerHTML='<option value="">ทุกโทนสี</option>'+tns.map(c=>`<option>${c}</option>`).join('');
+    const sts=[...new Set(D.products.map(p=>p.status))];
+    document.getElementById('fStatus').innerHTML='<option value="">ทุกสถานะ</option>'+sts.map(c=>`<option>${c}</option>`).join('');
+    ['search','fCat','fSize','fTone','fStatus'].forEach(id=>document.getElementById(id).addEventListener('input',table));
+  }
+  const STC={'มาใหม่':'#34d399','ขายดี':'#fbbf24','หมด':'#9aa3b2','ปกติ':'#5dd0e8'};
+  function table(){
+    const q=document.getElementById('search').value.toLowerCase();
+    const fc=document.getElementById('fCat').value, fz=document.getElementById('fSize').value, ft=document.getElementById('fTone').value, fs=document.getElementById('fStatus').value;
+    let rows=prods().filter(p=>
+      (!q||p.name.toLowerCase().includes(q)||(p.code||'').toLowerCase().includes(q)||(p.colors||'').toLowerCase().includes(q)) &&
+      (!fc||p.cat===fc)&&(!fz||p.size===fz)&&(!ft||p.tone===ft)&&(!fs||p.status===fs));
+    rows.sort((a,b)=>{let x=sortK==='mo'?MO(a):a[sortK],y=sortK==='mo'?MO(b):b[sortK];
+      if(typeof x==='string') return x.localeCompare(y)*sortDir;
+      return (x-y)*sortDir;});
+    document.querySelector('#tbl tbody').innerHTML=rows.map(p=>{
+      const b=BMAP[p.brand];
+      const u=safeUrl(p);
+      return `<tr>
+        <td><img class="thumb" loading="lazy" src="${thumbSrc(p)}" data-full="${p.img||''}" data-url="${u}" data-name="${esc(p.name)}" data-c="${p.color}" data-cat="${p.cat}" onerror="imgErr(this)" onclick="lb(this)" alt=""></td>
+        <td><span class="badge" style="background:${b.color}">${b.name}</span></td>
+        <td>${p.code}</td>
+        <td title="${p.name}" style="white-space:normal;max-width:280px"><a class="nmlink" href="${u}" target="_blank" rel="noopener">${p.name}</a></td>
+        <td>${p.cat}</td>
+        <td>${p.size||'—'}</td>
+        <td><div style="display:flex;align-items:center;gap:5px"><span class="swatch-inline" style="background:${p.color}"></span>${p.tone}</div>${p.colors?`<div class="pcolor" style="max-width:170px" title="${esc(p.colors)}">${esc(colShort(p.colors))}</div>`:''}</td>
+        <td class="num">฿${nf(p.price)}${p.disc?`<div class="sub" style="font-size:10px;opacity:.6">ลด ${p.disc}%</div>`:''}</td>
+        <td class="num"><b>${nf(MO(p))}</b></td>
+        <td class="num">${p.life?nf(p.life):'–'}</td>
+        <td class="num">${p.gmv?'฿'+nf(p.gmv):'–'}</td>
+        <td class="num">★${p.rating}</td>
+        <td><span class="badge" style="background:${STC[p.status]||'#2c313c'}">${p.status}</span></td>
+        <td><a class="tlink" href="${u}" target="_blank" rel="noopener">เปิด ↗</a></td>
+      </tr>`;}).join('');
+    document.getElementById('rowcount').textContent=`แสดง ${rows.length} รายการ · จัดเรียงตาม ${COLS.find(c=>c[0]===sortK)[1]} ${sortDir<0?'มาก→น้อย':'น้อย→มาก'}`;
+  }
+
+  // ---------- insights (data-aware) ----------
+  function insights(){
+    const P=prods();
+    const gmvByB={}; P.forEach(p=>gmvByB[p.brand]=(gmvByB[p.brand]||0)+p.price*MO(p));
+    const topB=Object.entries(gmvByB).sort((a,b)=>b[1]-a[1])[0];
+    const catTot={}; P.forEach(p=>catTot[p.cat]=(catTot[p.cat]||0)+MO(p));
+    const topCat=Object.entries(catTot).sort((a,b)=>b[1]-a[1])[0];
+    const toneTot={}; P.forEach(p=>toneTot[p.tone]=(toneTot[p.tone]||0)+MO(p));
+    const topTone=Object.entries(toneTot).sort((a,b)=>b[1]-a[1])[0];
+    const bandTot={}; P.forEach(p=>{const k=p.price<500?'ต่ำกว่า ฿500':p.price<800?'฿500–799':p.price<1200?'฿800–1,199':'฿1,200+';bandTot[k]=(bandTot[k]||0)+p.price*MO(p);});
+    const topBand=Object.entries(bandTot).sort((a,b)=>b[1]-a[1])[0];
+    const li=[
+      `เจ้าตลาด GMV ตอนนี้คือ <b style="color:${BMAP[topB[0]].color}">${BMAP[topB[0]].name}</b> (${money(topB[1])}/เดือน) — ใช้เป็น benchmark หลัก`,
+      `หมวดที่ตลาดทำเงินสุดคือ <b>${topCat[0]}</b> (${nf(topCat[1])} ชิ้น/เดือน) — เช็คว่าเรามี SKU หมวดนี้พอไหม`,
+      `โทนสีที่ขายดีสุดคือ <b>${topTone[0]}</b> — พิจารณาเพิ่มสัดส่วนสีนี้ใน collection หน้า`,
+      `เงินอยู่ที่ช่วงราคา <b>${topBand[0]}</b> — วาง price point ของ Nineitiesdesign/Soon ให้ชนช่วงนี้`,
+      `ดู Top 5 รายแบรนด์ด้านบน หาทรง/แพทเทิร์นที่ซ้ำกันหลายเจ้า = เทรนด์ที่ควรลงสนาม`,
+    ];
+    document.getElementById('insights').innerHTML=li.map(x=>`<li>${x}</li>`).join('');
+  }
+
+  // ---------- week selector + compare ----------
+  function fillSelectors(){
+    const ws=document.getElementById('wkSel'), cs=document.getElementById('cmpSel');
+    ws.innerHTML=PER.map((p,i)=>`<option value="${i}">${PL(p)}</option>`).join('');
+    cs.innerHTML='<option value="">— ไม่เทียบ —</option>'+PER.map((p,i)=>`<option value="${i}">${PL(p)}</option>`).join('');
+    ws.value=selIndex; cs.value=cmpIndex==null?'':cmpIndex;
+  }
+  function setMode(m){
+    if(mode===m) return;
+    mode=m; PER=buildPeriods(); selIndex=PER.length-1; cmpIndex=null;
+    document.getElementById('modeWeek').classList.toggle('active',m==='week');
+    document.getElementById('modeMonth').classList.toggle('active',m==='month');
+    fillSelectors(); renderAll();
+  }
+  function buildWeekUI(){
+    const ws=document.getElementById('wkSel'), cs=document.getElementById('cmpSel');
+    fillSelectors();
+    ws.onchange=()=>{selIndex=+ws.value; if(cmpIndex===selIndex){cmpIndex=null;cs.value='';} renderAll();};
+    cs.onchange=()=>{cmpIndex=cs.value===''?null:+cs.value; if(cmpIndex===selIndex){cmpIndex=null;cs.value='';} renderAll();};
+    document.getElementById('wkPrev').onclick=()=>{if(selIndex>0){selIndex--;ws.value=selIndex;renderAll();}};
+    document.getElementById('wkNext').onclick=()=>{if(selIndex<PER.length-1){selIndex++;ws.value=selIndex;renderAll();}};
+    document.getElementById('modeWeek').onclick=()=>setMode('week');
+    document.getElementById('modeMonth').onclick=()=>setMode('month');
+  }
+  function syncWeek(){
+    const unit=mode==='month'?'เดือน':'สัปดาห์';
+    const partialNote=(mode==='month'&&(curPer().partial||(cmpIndex!=null&&PER[cmpIndex].partial)))
+      ?'  ·  ⚠️ * = เดือนข้อมูลไม่ครบทั้งเดือน เทียบยอดรวมตรงๆ จะเพี้ยน':'';
+    document.getElementById('wkInfo').innerHTML=
+      `กำลังดูราย${unit} · <b style="color:var(--text)">${PL(curPer())}</b>`+(cmpIndex!=null?` · เทียบกับ ${PL(PER[cmpIndex])}`:'')+
+      `<span style="color:var(--warn)">${partialNote}</span>`;
+    document.getElementById('kpiWkLabel').textContent=PL(curPer());
+    document.getElementById('wkSel').value=selIndex;
+  }
+  function compareWeeks(){
+    const wrap=document.getElementById('cmpWrap');
+    if(cmpIndex==null){wrap.style.display='none';return;}
+    wrap.style.display='block';
+    const A=PER[cmpIndex], B=curPer(); // A=ฐาน, B=ที่ดู
+    document.getElementById('cmpTitle').innerHTML=`${PL(A)} <span style="color:var(--muted)">→</span> ${PL(B)}`;
+    const P=prods();
+    // per brand
+    const actB=BRANDS.filter(b=>active.has(b.id));
+    const rowsB=actB.map(b=>{
+      const ps=P.filter(p=>p.brand===b.id);
+      const a=ps.reduce((s,p)=>s+MOp(p,A),0), bb=ps.reduce((s,p)=>s+MOp(p,B),0);
+      return {name:b.name,color:b.color,a,bb,d:pct(bb,a)};
+    }).sort((x,y)=>y.bb-x.bb);
+    const maxB=Math.max(1,...rowsB.map(r=>Math.max(r.a,r.bb)));
+    document.getElementById('cmpBrands').innerHTML=rowsB.map(r=>
+      `<div class="cmprow"><div class="cl"><span class="nm">${r.name}</span>
+        <span><span class="sub" style="font-size:11px">${nf(r.a)} → ${nf(r.bb)}</span> &nbsp;<span class="delta ${r.d>0.5?'up':(r.d<-0.5?'down':'flat')}">${r.d>0?'+':''}${r.d.toFixed(1)}%</span></span></div>
+        <div class="cmpbars"><div class="ba" style="width:${r.a/maxB*100}%;background:${r.color}"></div>
+        <div class="bb" style="width:${r.bb/maxB*100}%;background:${r.color}"></div></div></div>`).join('');
+    // per category movers
+    const cats=[...new Set(P.map(p=>p.cat))];
+    const rowsC=cats.map(c=>{
+      const ps=P.filter(p=>p.cat===c);
+      const a=ps.reduce((s,p)=>s+MOp(p,A),0), bb=ps.reduce((s,p)=>s+MOp(p,B),0);
+      return {c,a,bb,diff:bb-a,d:pct(bb,a)};
+    }).filter(r=>r.a+r.bb>0).sort((x,y)=>Math.abs(y.diff)-Math.abs(x.diff)).slice(0,8);
+    document.getElementById('cmpCats').innerHTML=rowsC.map(r=>
+      `<div class="cmprow"><div class="cl"><span class="nm">${r.c}</span>
+        <span><span class="sub" style="font-size:11px">${nf(r.a)} → ${nf(r.bb)}</span> &nbsp;<span class="delta ${r.diff>0?'up':(r.diff<0?'down':'flat')}">${r.diff>0?'+':''}${nf(r.diff)} (${r.d>0?'+':''}${r.d.toFixed(0)}%)</span></span></div></div>`).join('');
+  }
+
+  // ---------- render all ----------
+  function renderAll(){
+    syncWeek(); compareWeeks();
+    kpis(); marketOverview(); scoreboard(); trends(); categories(); gapAnalysis(); tones(); prices(); heroes(); topSellers(); table(); insights();
+  }
+
+  // ----- วิเคราะห์โทนสีจากรูปสินค้าจริง (ฝั่งเบราว์เซอร์) -----
+  function rgbToTone(r,g,b){
+    r/=255;g/=255;b/=255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b),v=mx,dl=mx-mn,s=mx===0?0:dl/mx;
+    let h=0; if(dl>0){ if(mx===r)h=60*(((g-b)/dl)%6); else if(mx===g)h=60*((b-r)/dl+2); else h=60*((r-g)/dl+4);} if(h<0)h+=360;
+    if(s<0.18){ if(v<0.22)return 'ดำ'; if(v>0.70)return 'ครีม/ขาว'; return (r>=b)?'เอิร์ธ':'เทา'; }
+    const vivid=s>0.55&&v>0.5;
+    if(h>=20&&h<50) return (vivid&&v>0.65)?'สีสด':'เอิร์ธ';
+    if(h>=50&&h<70) return vivid?'สีสด':'เอิร์ธ';
+    if(h>=70&&h<165) return vivid?'สีสด':'เซจ/เขียว';
+    if(h>=165&&h<255) return (s<0.5&&v<0.72)?'เดนิม':(vivid?'สีสด':'เดนิม');
+    if(h>=255&&h<320) return (v>0.72&&s<0.45)?'พาสเทล':'สีสด';
+    if(v>0.78&&s<0.45)return 'พาสเทล';
+    if(v<0.45)return 'เอิร์ธ';
+    return vivid?'สีสด':'พาสเทล';
+  }
+  const h2=n=>{const s=Math.max(0,Math.min(255,Math.round(n))).toString(16);return s.length<2?'0'+s:s;};
+  const rgbToHex=(r,g,b)=>'#'+h2(r)+h2(g)+h2(b);
+  const hexToRgb=h=>{const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255];};
+  // ดึง "สีเด่นจริง (dominant RGB)" จากกลางภาพ — ลด noise จากนางแบบ/ฉาก, เน้นพิกเซลมีสี
+  function domColor(data,w){
+    // แยกพิกเซล "มีสี (chromatic)" ออกจาก "กลางๆ (neutral)" — ให้สีเสื้อผ้าชนะแสง/ฉาก
+    const lo=Math.floor(w*0.18), hi=Math.ceil(w*0.82);
+    const ch={}; let nch=0,nbg=0,tot=0,nr=0,ng=0,nb=0,nn=0;
+    for(let y=lo;y<hi;y++)for(let x=lo;x<hi;x++){
+      const i=(y*w+x)*4, R=data[i],G=data[i+1],B=data[i+2],A=data[i+3];
+      tot++;
+      if(A<128) continue;
+      if(R>238&&G>238&&B>238) continue;                 // พื้นขาว
+      nbg++;
+      const mx=Math.max(R,G,B),mn=Math.min(R,G,B),s=mx===0?0:(mx-mn)/mx;
+      if(s>0.28&&mx>40){                                 // มีสีจริง → เข้า histogram
+        nch++;
+        const q=((R>>5)<<10)|((G>>5)<<5)|(B>>5);
+        const o=ch[q]||(ch[q]={c:0,r:0,g:0,b:0}); o.c++;o.r+=R;o.g+=G;o.b+=B;
+      } else { nr+=R;ng+=G;nb+=B;nn++; }                 // กลางๆ → เฉลี่ยไว้เผื่อ fallback
+    }
+    if(nbg < tot*0.04) return [235,233,228];             // ขาวนวลเกือบหมด
+    if(nch >= nbg*0.10){                                 // มีสีพอ → ใช้สีเด่น (เสื้อผ้า)
+      let best=null; for(const k in ch){ if(!best||ch[k].c>best.c) best=ch[k]; }
+      return [best.r/best.c, best.g/best.c, best.b/best.c];
+    }
+    return nn?[nr/nn,ng/nn,nb/nn]:[235,233,228];         // สีกลางจริง → เฉลี่ย neutral
+  }
+  const TKEY='cr_hex_v4'; let toneCache={};
+  try{toneCache=JSON.parse(localStorage.getItem(TKEY)||'{}');}catch(e){}
+  function analyzeColors(){
+    const status=document.getElementById('toneStatus');
+    const items=D.products.filter(p=>p.img);
+    if(!items.length){return;}
+    // ใช้ค่าจาก cache ก่อน (cache เก็บ hex สีจริง → derive โทนได้)
+    const applyHex=(p,hex)=>{const[r,g,b]=hexToRgb(hex);p.hex=hex;p.color=hex;p.tone=rgbToTone(r,g,b);};
+    items.forEach(p=>{const k=p.code+'|'+p.img; if(toneCache[k])applyHex(p,toneCache[k]);});
+    const todo=items.filter(p=>!toneCache[p.code+'|'+p.img]);
+    tones(); table();
+    if(!todo.length){ if(status)status.textContent=`· 🎨 วิเคราะห์สีจากรูปจริงแล้ว ${items.length} รายการ`; return; }
+    let idx=0,active=0,done=0,changed=0;
+    if(status)status.textContent='· 🎨 กำลังวิเคราะห์สีจากรูป…';
+    function fin(p,hex){ active--;done++;
+      if(hex){applyHex(p,hex);toneCache[p.code+'|'+p.img]=hex;changed++;}
+      if(status&&done%10===0)status.textContent=`· 🎨 วิเคราะห์สีจากรูป… ${done}/${todo.length}`;
+      if(done%30===0)tones();
+      if(done===todo.length){
+        try{localStorage.setItem(TKEY,JSON.stringify(toneCache));}catch(e){}
+        tones(); table(); insights();
+        if(status)status.textContent=`· 🎨 วิเคราะห์สีจากรูปจริงแล้ว ${items.length} รายการ (เติม ${changed})`;
+      }
+      pump();
+    }
+    function pump(){
+      while(active<6 && idx<todo.length){
+        const p=todo[idx++]; active++;
+        const img=new Image(); img.crossOrigin='anonymous'; let s=false;
+        const done1=t=>{if(s)return;s=true;fin(p,t);};
+        const to=setTimeout(()=>done1(null),12000);
+        img.onload=()=>{clearTimeout(to);try{
+          const c=document.createElement('canvas');c.width=50;c.height=50;
+          const x=c.getContext('2d');x.drawImage(img,0,0,50,50);
+          const[r,g,b]=domColor(x.getImageData(0,0,50,50).data,50);
+          done1(rgbToHex(r,g,b));
+        }catch(e){done1(null);}};
+        img.onerror=()=>{clearTimeout(to);done1(null);};
+        img.src=p.img;
+      }
+    }
+    pump();
+  }
+
+  // sidebar nav: scroll-spy + active highlight
+  function initNav(){
+    const links=[...document.querySelectorAll('.navlink')];
+    const map=Object.fromEntries(links.map(a=>[a.getAttribute('href').slice(1),a]));
+    const secs=Object.keys(map).map(id=>document.getElementById(id)).filter(Boolean);
+    const setActive=a=>{links.forEach(l=>l.classList.remove('active'));if(a)a.classList.add('active');};
+    if('IntersectionObserver' in window){
+      const obs=new IntersectionObserver(es=>{
+        es.forEach(e=>{if(e.isIntersecting)setActive(map[e.target.id]);});
+      },{rootMargin:'-8% 0px -82% 0px',threshold:0});
+      secs.forEach(s=>obs.observe(s));
+    }
+    links.forEach(a=>a.addEventListener('click',()=>setActive(a)));
+    if(links[0])links[0].classList.add('active');
+  }
+
+  // init
+  header(); buildFilter(); buildTableHead(); buildWeekUI(); initNav();
+  document.getElementById('trendMetric').addEventListener('change',trends);
+  renderAll();
+  analyzeColors();   // วิเคราะห์โทนสีจากรูปจริง (รันเบื้องหลัง)
+  document.getElementById('footer').innerHTML=
+    `สร้างโดย Momo · ${D.meta.source} · data: ${D.meta.generated} · ${window.__DATA_SRC||'embedded'} — อัปเดตข้อมูลที่ data.json`;
+}
+// โหลด data สดจาก data.json (เวลา host บนเว็บ — อัปไฟล์เดียวเว็บอัปเอง)
+// ถ้าเปิดแบบ local double-click (file://) จะ fetch ไม่ได้ → ใช้ data.js ที่ฝังมาแทน
+(async function(){
+  try{
+    const r = await fetch('./data.json?t='+Date.now(), {cache:'no-store'});
+    if(r.ok){ const j = await r.json(); if(j && j.products && j.brands){ window.DASHBOARD_DATA = j; window.__DATA_SRC='live (data.json)'; } }
+  }catch(e){ /* file:// หรือไม่มีไฟล์ → ใช้ data ที่ฝังใน data.js */ }
+  if(window.DASHBOARD_DATA) boot();
+})();
+</script>
+<div id="lightbox" class="lb-overlay" onclick="closeLb(event)">
+  <div class="lb-box">
+    <button class="lb-close" onclick="closeLb()" title="ปิด (Esc)">✕</button>
+    <img id="lbImg" src="" alt="">
+    <div class="lb-meta"><span class="lbnm" id="lbName"></span><a id="lbLink" target="_blank" rel="noopener">เปิดใน Shopee ↗</a></div>
+  </div>
+</div>
+</body>
+</html>
